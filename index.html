@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense & Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-left">
+      <span class="logo">💰</span>
+      <h1 class="app-title">Budget Visualizer</h1>
+    </div>
+    <div class="header-right">
+      <button id="toggleTheme" class="btn-icon" title="Toggle dark/light mode">🌙</button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  <main class="container">
+
+    <!-- ===== SUMMARY CARDS ===== -->
+    <section class="summary-cards">
+      <div class="card card--income">
+        <p class="card-label">Total Income</p>
+        <p class="card-value" id="totalIncome">Rp 0</p>
+      </div>
+      <div class="card card--expense">
+        <p class="card-label">Total Expenses</p>
+        <p class="card-value" id="totalExpense">Rp 0</p>
+      </div>
+      <div class="card card--balance">
+        <p class="card-label">Balance</p>
+        <p class="card-value" id="balance">Rp 0</p>
+      </div>
+      <div class="card card--budget">
+        <p class="card-label">Spending Limit</p>
+        <p class="card-value" id="budgetDisplay">Not Set</p>
+        <button class="btn-link" id="openBudgetModal">Set Limit</button>
+      </div>
+    </section>
+
+    <!-- ===== BUDGET ALERT ===== -->
+    <div id="budgetAlert" class="budget-alert hidden">
+      ⚠️ Warning: You have exceeded your spending limit!
+    </div>
+
+    <!-- ===== TWO-COLUMN LAYOUT ===== -->
+    <div class="two-col">
+
+      <!-- LEFT: ADD TRANSACTION + CATEGORY MANAGER -->
+      <div class="left-panel">
+
+        <!-- Add Transaction Form -->
+        <section class="panel">
+          <h2 class="panel-title">Add Transaction</h2>
+          <form id="transactionForm" novalidate>
+
+            <div class="form-group">
+              <label for="txDesc">Description</label>
+              <input type="text" id="txDesc" placeholder="e.g. Groceries, Salary…" maxlength="60" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="txAmount">Amount (Rp)</label>
+                <input type="number" id="txAmount" placeholder="0" min="1" required />
+              </div>
+              <div class="form-group">
+                <label for="txType">Type</label>
+                <select id="txType">
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="txCategory">Category</label>
+                <select id="txCategory"></select>
+              </div>
+              <div class="form-group">
+                <label for="txDate">Date</label>
+                <input type="date" id="txDate" required />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--full">+ Add Transaction</button>
+          </form>
+        </section>
+
+        <!-- Custom Category Manager -->
+        <section class="panel">
+          <h2 class="panel-title">Categories</h2>
+          <div class="category-form">
+            <input type="text" id="newCategoryInput" placeholder="New category name…" maxlength="30" />
+            <button id="addCategoryBtn" class="btn btn--secondary">Add</button>
+          </div>
+          <ul id="categoryList" class="category-list"></ul>
+        </section>
+
+      </div>
+
+      <!-- RIGHT: CHARTS -->
+      <div class="right-panel">
+
+        <!-- Expense by Category Chart -->
+        <section class="panel">
+          <h2 class="panel-title">Expenses by Category</h2>
+          <div class="chart-wrapper">
+            <canvas id="categoryChart"></canvas>
+            <p class="chart-empty" id="categoryChartEmpty">No expense data yet.</p>
+          </div>
+        </section>
+
+        <!-- Monthly Summary Chart -->
+        <section class="panel">
+          <div class="panel-title-row">
+            <h2 class="panel-title">Monthly Summary</h2>
+            <select id="monthFilter" class="select-sm"></select>
+          </div>
+          <div class="monthly-stats">
+            <div class="stat-item">
+              <span class="stat-label">Income</span>
+              <span class="stat-value income-text" id="monthIncome">Rp 0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Expenses</span>
+              <span class="stat-value expense-text" id="monthExpense">Rp 0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Net</span>
+              <span class="stat-value" id="monthNet">Rp 0</span>
+            </div>
+          </div>
+          <div class="chart-wrapper chart-wrapper--bar">
+            <canvas id="monthlyChart"></canvas>
+            <p class="chart-empty" id="monthlyChartEmpty">No data for this month.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ===== TRANSACTION LIST ===== -->
+    <section class="panel">
+      <div class="panel-title-row">
+        <h2 class="panel-title">Transactions</h2>
+        <div class="list-controls">
+          <select id="sortSelect" class="select-sm">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="amount-desc">Highest Amount</option>
+            <option value="amount-asc">Lowest Amount</option>
+            <option value="category-asc">Category A–Z</option>
+          </select>
+          <select id="filterCategory" class="select-sm">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <div id="transactionList" class="transaction-list">
+        <p class="empty-state" id="emptyState">No transactions yet. Add one above!</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== BUDGET MODAL ===== -->
+  <div id="budgetModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 class="modal-title" id="modalTitle">Set Spending Limit</h2>
+      <p class="modal-desc">Enter a monthly spending limit. You'll be alerted when you exceed it.</p>
+      <div class="form-group">
+        <label for="budgetInput">Spending Limit (Rp)</label>
+        <input type="number" id="budgetInput" placeholder="e.g. 5000000" min="1" />
+      </div>
+      <div class="modal-actions">
+        <button id="saveBudget" class="btn btn--primary">Save</button>
+        <button id="clearBudget" class="btn btn--danger">Remove Limit</button>
+        <button id="closeModal" class="btn btn--ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DELETE CONFIRM MODAL ===== -->
+  <div id="deleteModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal modal--sm">
+      <h2 class="modal-title">Delete Transaction?</h2>
+      <p class="modal-desc">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button id="confirmDelete" class="btn btn--danger">Delete</button>
+        <button id="cancelDelete" class="btn btn--ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
